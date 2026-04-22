@@ -112,9 +112,20 @@ const shuffleArray = (array: any[]) => {
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
-        <nav className="fixed top-0 w-full z-[60] px-6 py-4 md:px-12 flex items-center justify-between">
+        <nav className={`fixed top-0 w-full z-[60] px-6 py-4 md:px-12 flex items-center justify-between transition-all duration-500 ${
+            isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm py-3' : 'bg-transparent'
+        }`}>
             <Link to="/" className="z-[70]">
                 <h1 className="font-serif text-2xl md:text-3xl tracking-tighter text-studio-ebony italic font-semibold">Tove Studios.</h1>
             </Link>
@@ -669,13 +680,59 @@ const Footer = () => (
             </div>
             <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
                 <span className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone">© 2026 TOVE STUDIOS. ALL RIGHTS RESERVED.</span>
-                <div className="flex gap-4">
-                    <span className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone">Privacy</span>
-                    <span className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone">Terms</span>
+                <div className="flex gap-6">
+                    <Link to="/policies" className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone hover:text-white transition-colors">Privacy</Link>
+                    <Link to="/policies" className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone hover:text-white transition-colors">Terms</Link>
+                    <Link to="/policies" className="font-sans text-[9px] uppercase tracking-[0.4em] text-studio-stone hover:text-white transition-colors">Policies</Link>
                 </div>
             </div>
         </div>
     </footer>
+);
+
+const PoliciesPage = () => (
+    <div className="pt-32 pb-24 px-6 md:px-12 max-w-4xl mx-auto">
+        <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-studio-stone mb-4 block underline underline-offset-8 font-bold">LEGAL & CONDUCT</span>
+        <h2 className="font-serif italic text-5xl md:text-7xl tracking-tighter mb-16">Studio Policies.</h2>
+        
+        <div className="space-y-12 font-sans text-studio-ebony">
+            <section>
+                <h3 className="text-sm uppercase tracking-widest font-bold mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-studio-ebony"></div>
+                    Booking & Confirmations
+                </h3>
+                <p className="text-studio-stone leading-relaxed">
+                    All studio sessions must be paid in full at the time of booking. We do not place holds on any slots without confirmed payment. Once payment is received, your session is locked into our curated schedule.
+                </p>
+            </section>
+
+            <section>
+                <h3 className="text-sm uppercase tracking-widest font-bold mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-studio-ebony"></div>
+                    Conduct & Care
+                </h3>
+                <p className="text-studio-stone leading-relaxed">
+                    Tove Studios is a sanctuary for creation. We expect all guests to treat the space, the equipment, and the surrounding art gallery with the utmost respect. Any damage to studio property will be billed to the client on record.
+                </p>
+            </section>
+
+            <section>
+                <h3 className="text-sm uppercase tracking-widest font-bold mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-studio-ebony"></div>
+                    Media & Press
+                </h3>
+                <p className="text-studio-stone leading-relaxed">
+                    Commercial shoots require specific authorization. If your production involves major equipment, large crews (over 7 people), or intended broadcast, please consult with a curator prior to your session to ensure we accommodate your technical needs.
+                </p>
+            </section>
+        </div>
+
+        <div className="mt-24 pt-12 border-t border-ebony-10">
+            <Link to="/" className="btn-ebony px-8 py-4 rounded-full text-[10px] uppercase tracking-widest font-bold inline-flex items-center gap-3">
+                <ChevronLeft className="w-4 h-4" /> Return to Essence
+            </Link>
+        </div>
+    </div>
 );
 
 const ScrollToTop = () => {
@@ -695,6 +752,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/studio/:id" element={<StudioDetails />} />
+          <Route path="/policies" element={<PoliciesPage />} />
         </Routes>
         <Footer />
         <ChatWidget />
