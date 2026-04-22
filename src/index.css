@@ -1,0 +1,96 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+@theme {
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: 'Inter', sans-serif;
+  
+  --color-studio-cream: #FDFBF7;
+  --color-studio-ebony: #1C1917;
+  --color-studio-stone: #78716C;
+  --color-studio-warm-gray: #D6D3D1;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-studio-cream);
+  color: var(--color-studio-ebony);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif { font-family: var(--font-serif); }
+.font-sans { font-family: var(--font-sans); }
+
+/* Custom smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Horizontal scroll container */
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+.horizontal-scroll > * {
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+
+@keyframes slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-infinite-scroll {
+  display: flex;
+  width: max-content;
+  animation: slide 30s linear infinite;
+}
+
+.animate-infinite-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Reduced spacing between sections */
+.section-spacing {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+@media (min-width: 768px) {
+  .section-spacing {
+    padding-top: 8rem;
+    padding-bottom: 8rem;
+  }
+}
+
+.btn-ebony {
+  background-color: var(--color-studio-ebony);
+  color: #fff;
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ebony:hover {
+  background-color: #44403C;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.btn-ebony:active {
+  transform: translateY(-1px);
+}
+
+.border-ebony-10 {
+    border-color: rgba(28, 25, 23, 0.1);
+}
