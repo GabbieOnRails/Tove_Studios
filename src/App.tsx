@@ -110,6 +110,100 @@ const shuffleArray = (array: any[]) => {
 
 // --- Components ---
 
+const Calendar = ({ value, onChange }: { value: Date | null, onChange: (date: Date) => void }) => {
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    
+    const daysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay();
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
+
+    const handlePrevMonth = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+    };
+
+    const handleNextMonth = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+    };
+
+    const days = [];
+    const numDays = daysInMonth(currentMonth.getMonth(), currentMonth.getFullYear());
+    const startDay = firstDayOfMonth(currentMonth.getMonth(), currentMonth.getFullYear());
+
+    for (let i = 0; i < startDay; i++) {
+        days.push(<div key={`empty-${i}`} className="p-2"></div>);
+    }
+
+    for (let i = 1; i <= numDays; i++) {
+        const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+        const isSelected = value?.toDateString() === date.toDateString();
+        const isToday = new Date().toDateString() === date.toDateString();
+        const isPast = date < new Date(new Date().setHours(0,0,0,0));
+
+        days.push(
+            <button
+                key={i}
+                disabled={isPast}
+                onClick={(e) => { e.preventDefault(); onChange(date); }}
+                className={`p-2 w-full aspect-square flex items-center justify-center rounded-full text-[10px] font-sans transition-all ${
+                    isSelected ? 'bg-studio-ebony text-white scale-110 shadow-lg' : 
+                    isPast ? 'text-studio-stone/30 cursor-not-allowed' :
+                    isToday ? 'border border-studio-ebony text-studio-ebony' : 'hover:bg-studio-cream text-studio-ebony'
+                }`}
+            >
+                {i}
+            </button>
+        );
+    }
+
+    return (
+        <div className="bg-white p-4 rounded-2xl border border-ebony-10 shadow-sm">
+            <div className="flex items-center justify-between mb-6 px-2">
+                <span className="font-serif italic text-lg">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                <div className="flex gap-2">
+                    <button onClick={handlePrevMonth} className="p-1 hover:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={handleNextMonth} className="p-1 hover:opacity-50"><ChevronRight className="w-4 h-4" /></button>
+                </div>
+            </div>
+            <div className="grid grid-cols-7 gap-1 mb-2">
+                {dayNames.map(d => (
+                    <div key={d} className="text-center text-[8px] font-bold text-studio-stone uppercase tracking-widest">{d}</div>
+                ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+                {days}
+            </div>
+        </div>
+    );
+};
+
+const TimePicker = ({ value, onChange }: { value: string, onChange: (time: string) => void }) => {
+    const timeSlots = [
+        "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
+        "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", 
+        "05:00 PM", "06:00 PM"
+    ];
+
+    return (
+        <div className="grid grid-cols-2 gap-2">
+            {timeSlots.map(time => (
+                <button
+                    key={time}
+                    onClick={(e) => { e.preventDefault(); onChange(time); }}
+                    className={`px-4 py-3 rounded-xl border text-[10px] uppercase font-bold tracking-widest transition-all ${
+                        value === time ? 'bg-studio-ebony text-white border-studio-ebony shadow-md' : 'bg-studio-cream/50 border-ebony-10 text-studio-stone hover:border-studio-ebony hover:text-studio-ebony'
+                    }`}
+                >
+                    {time}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -288,7 +382,7 @@ const LandingPage = () => {
                             One Space, <br />Endless <br />Possibilities.
                         </h2>
                         <p className="font-sans text-studio-stone text-lg max-w-md leading-relaxed mb-12">
-                            Step into Tove Content Studio, a warm, serene space nestled in an art gallery and studio. More than a space—an encounter with light and art.
+                            Step into Tove Studios: an architecture of stillness. Designed to let your vision breathe and your stories unfold in perfect, intentional light.
                         </p>
                         <div className="flex gap-4">
                             <motion.a 
@@ -400,7 +494,8 @@ const LandingPage = () => {
 const StudioDetails = () => {
     const { id } = useParams();
     const studio = STUDIOS.find(s => s.id === id);
-    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [selectedTime, setSelectedTime] = useState('');
     const [bookingStep, setBookingStep] = useState(1);
     
     if (!studio) return <div>Studio not found</div>;
@@ -468,47 +563,83 @@ const StudioDetails = () => {
                                 {bookingStep === 1 ? (
                                     <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                         <h4 className="font-serif italic text-3xl mb-8">Secure your slot.</h4>
-                                        <div className="space-y-6 mb-10">
+                                        <div className="space-y-8 mb-10">
                                             <div>
-                                                <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-2 block">Date Selection</label>
-                                                <input 
-                                                    type="date" 
-                                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                                    className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 focus:outline-none font-sans text-sm"
-                                                />
+                                                <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-4 block">Pick a Date</label>
+                                                <Calendar value={selectedDate} onChange={setSelectedDate} />
                                             </div>
+                                            
+                                            <AnimatePresence>
+                                                {selectedDate && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-4 block">Select Time Slot</label>
+                                                        <TimePicker value={selectedTime} onChange={setSelectedTime} />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+
                                             <div>
                                                 <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-2 block">Project Nature</label>
-                                                <select className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 focus:outline-none font-sans text-sm appearance-none bg-white">
-                                                    <option>Fashion Editorial</option>
-                                                    <option>Fine Art Production</option>
-                                                    <option>Brand Campaign</option>
-                                                    <option>Personal Expression</option>
-                                                </select>
+                                                <div className="relative">
+                                                    <select className="w-full p-4 rounded-xl bg-studio-cream/50 border border-ebony-10 focus:outline-none font-sans text-sm appearance-none cursor-pointer">
+                                                        <option>Fashion Editorial</option>
+                                                        <option>Fine Art Production</option>
+                                                        <option>Brand Campaign</option>
+                                                        <option>Personal Expression</option>
+                                                    </select>
+                                                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none rotate-90" />
+                                                </div>
                                             </div>
                                         </div>
+                                        
                                         <button 
                                             onClick={() => setBookingStep(2)}
-                                            disabled={!selectedDate}
-                                            className="w-full btn-ebony p-5 rounded-full text-[10px] uppercase tracking-widest font-bold disabled:opacity-30 flex items-center justify-center gap-3"
+                                            disabled={!selectedDate || !selectedTime}
+                                            className="w-full btn-ebony p-5 rounded-full text-[10px] uppercase tracking-widest font-bold disabled:opacity-30 flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all"
                                         >
                                             Continue to Details <ArrowRight className="w-4 h-4" />
                                         </button>
                                     </motion.div>
                                 ) : (
                                     <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <div className="flex items-center gap-2 mb-6 cursor-pointer text-studio-stone hover:text-black" onClick={() => setBookingStep(1)}>
-                                            <ChevronLeft className="w-4 h-4" /> <span className="text-[9px] uppercase tracking-widest">Back</span>
+                                        <div className="flex items-center gap-2 mb-6 cursor-pointer text-studio-stone hover:text-black group" onClick={() => setBookingStep(1)}>
+                                            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> <span className="text-[9px] uppercase tracking-widest">Back to Calendar</span>
                                         </div>
-                                        <h4 className="font-serif italic text-3xl mb-8">Who are you?</h4>
+                                        <h4 className="font-serif italic text-3xl mb-4">Request Access.</h4>
+                                        <p className="text-[10px] text-studio-stone uppercase tracking-widest mb-8">
+                                            {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {selectedTime}
+                                        </p>
+                                        
                                         <div className="space-y-4 mb-8">
-                                            <input type="text" placeholder="Full Name" className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 font-sans text-sm" />
-                                            <input type="email" placeholder="Email Address" className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 font-sans text-sm" />
-                                            <input type="tel" placeholder="Phone Number" className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 font-sans text-sm" />
-                                            <textarea placeholder="Tell us about the magic you're planning..." className="w-full p-4 rounded-xl bg-studio-cream border border-ebony-10 font-sans text-sm h-24" />
+                                            <div className="relative group">
+                                                <input type="text" placeholder="Full Name" className="w-full p-5 rounded-2xl bg-studio-cream/50 border border-ebony-10 focus:border-studio-ebony transition-colors font-sans text-sm outline-none" />
+                                            </div>
+                                            <div className="relative group">
+                                                <input type="email" placeholder="Email Address" className="w-full p-5 rounded-2xl bg-studio-cream/50 border border-ebony-10 focus:border-studio-ebony transition-colors font-sans text-sm outline-none" />
+                                            </div>
+                                            <div className="relative group">
+                                                <input type="tel" placeholder="Phone Number" className="w-full p-5 rounded-2xl bg-studio-cream/50 border border-ebony-10 focus:border-studio-ebony transition-colors font-sans text-sm outline-none" />
+                                            </div>
+                                            <div className="relative group">
+                                                <textarea placeholder="Tell us about the magic you're planning..." className="w-full p-5 rounded-2xl bg-studio-cream/50 border border-ebony-10 focus:border-studio-ebony transition-colors font-sans text-sm h-32 outline-none resize-none" />
+                                            </div>
                                         </div>
-                                        <button className="w-full btn-ebony p-5 rounded-full text-[10px] uppercase tracking-widest font-bold shadow-xl">Request Access</button>
-                                        <p className="mt-4 text-[9px] text-studio-stone text-center uppercase tracking-widest">A curator will reach out within 24h.</p>
+                                        
+                                        <button className="w-full btn-ebony p-6 rounded-full text-[10px] uppercase tracking-widest font-bold shadow-2xl active:scale-95 transition-all">
+                                            Confirm Details
+                                        </button>
+                                        <div className="mt-6 flex flex-col items-center gap-2">
+                                            <p className="text-[8px] text-studio-stone text-center uppercase tracking-[0.2em]">A curator will reach out within 24h to finalize.</p>
+                                            <div className="flex items-center gap-1">
+                                                <Shield className="w-3 h-3 text-studio-stone" />
+                                                <span className="text-[8px] text-studio-stone uppercase tracking-[0.1em]">Secure Booking Experience</span>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -672,7 +803,7 @@ const Footer = () => (
                 <div>
                     <h5 className="font-sans text-[10px] uppercase tracking-[0.3em] text-studio-stone mb-10">THE ESSENCE</h5>
                     <ul className="space-y-4 font-sans text-xs uppercase tracking-widest font-medium text-studio-warm-gray">
-                        <li>VI Annex, Lagos</li>
+                        <li>Surulere, Lagos</li>
                         <li>@korsiwa.co</li>
                         <li>Private Access</li>
                     </ul>

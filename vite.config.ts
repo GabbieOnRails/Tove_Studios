@@ -9,11 +9,13 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'global': 'globalThis',
     },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'node-fetch': path.resolve(__dirname, 'src/fetch-shim.js'),
+        'express': path.resolve(__dirname, 'src/empty.js'),
+        'dotenv': path.resolve(__dirname, 'src/empty.js'),
       },
     },
     server: {
