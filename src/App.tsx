@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BrowserRouter as Router, 
   Routes, 
@@ -183,8 +183,7 @@ const Calendar = ({ value, onChange }: { value: Date | null, onChange: (date: Da
 const TimePicker = ({ value, onChange }: { value: string, onChange: (time: string) => void }) => {
     const timeSlots = [
         "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
-        "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", 
-        "05:00 PM", "06:00 PM"
+        "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"
     ];
 
     return (
@@ -198,6 +197,26 @@ const TimePicker = ({ value, onChange }: { value: string, onChange: (time: strin
                     }`}
                 >
                     {time}
+                </button>
+            ))}
+        </div>
+    );
+};
+
+const DurationPicker = ({ value, onChange }: { value: number, onChange: (duration: number) => void }) => {
+    const durations = [1, 2, 4, 8];
+
+    return (
+        <div className="flex gap-2">
+            {durations.map(d => (
+                <button
+                    key={d}
+                    onClick={(e) => { e.preventDefault(); onChange(d); }}
+                    className={`flex-1 px-3 py-3 rounded-xl border text-[10px] uppercase font-bold tracking-widest transition-all ${
+                        value === d ? 'bg-studio-ebony text-white border-studio-ebony shadow-md' : 'bg-studio-cream/50 border-ebony-10 text-studio-stone hover:border-studio-ebony hover:text-studio-ebony'
+                    }`}
+                >
+                    {d}h
                 </button>
             ))}
         </div>
@@ -496,9 +515,25 @@ const StudioDetails = () => {
     const studio = STUDIOS.find(s => s.id === id);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState('');
+    const [selectedDuration, setSelectedDuration] = useState(1);
     const [bookingStep, setBookingStep] = useState(1);
     
     if (!studio) return <div>Studio not found</div>;
+
+    const getEndTime = (startTime: string, duration: number) => {
+        const [time, period] = startTime.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        const endHours = hours + duration;
+        const endPeriod = endHours >= 12 ? 'PM' : 'AM';
+        let displayHours = endHours % 12;
+        if (displayHours === 0) displayHours = 12;
+        
+        return `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${endPeriod}`;
+    };
 
     return (
         <div className="pt-24 pb-32">
@@ -577,8 +612,13 @@ const StudioDetails = () => {
                                                         exit={{ height: 0, opacity: 0 }}
                                                         className="overflow-hidden"
                                                     >
-                                                        <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-4 block">Select Time Slot</label>
+                                                        <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-4 block">Select Start Time</label>
                                                         <TimePicker value={selectedTime} onChange={setSelectedTime} />
+
+                                                        <div className="mt-8">
+                                                            <label className="font-sans text-[9px] uppercase tracking-widest text-studio-stone mb-4 block">Booking Duration</label>
+                                                            <DurationPicker value={selectedDuration} onChange={setSelectedDuration} />
+                                                        </div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
@@ -602,7 +642,7 @@ const StudioDetails = () => {
                                             disabled={!selectedDate || !selectedTime}
                                             className="w-full btn-ebony p-5 rounded-full text-[10px] uppercase tracking-widest font-bold disabled:opacity-30 flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all"
                                         >
-                                            Continue to Details <ArrowRight className="w-4 h-4" />
+                                            Continue (₦{(studio.price * selectedDuration).toLocaleString()}) <ArrowRight className="w-4 h-4" />
                                         </button>
                                     </motion.div>
                                 ) : (
@@ -611,8 +651,11 @@ const StudioDetails = () => {
                                             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> <span className="text-[9px] uppercase tracking-widest">Back to Calendar</span>
                                         </div>
                                         <h4 className="font-serif italic text-3xl mb-4">Request Access.</h4>
+                                        <p className="text-[10px] text-studio-stone uppercase tracking-widest mb-2">
+                                            {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        </p>
                                         <p className="text-[10px] text-studio-stone uppercase tracking-widest mb-8">
-                                            {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {selectedTime}
+                                            {selectedTime} — {getEndTime(selectedTime, selectedDuration)} ({selectedDuration} {selectedDuration === 1 ? 'Hour' : 'Hours'})
                                         </p>
                                         
                                         <div className="space-y-4 mb-8">
